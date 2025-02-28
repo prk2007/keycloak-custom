@@ -48,7 +48,7 @@ public class CustomAuthenticatorFactory implements AuthenticatorFactory {
 
     @Override
     public String getDisplayType() {
-        return "Custom Authenticator";
+        return "V Authenticator";
     }
 
     @Override

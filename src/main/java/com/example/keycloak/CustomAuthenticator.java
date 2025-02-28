@@ -25,7 +25,16 @@ public class CustomAuthenticator implements Authenticator {
 
     private final KeycloakSession session;
 
+    private static String IDP_ID;
+    private String AUTH_ID;
     public CustomAuthenticator(KeycloakSession session) {
+
+        //get idp_id from the file or redis if not found call external API and update or redis-key the file.
+        /**
+         * f = FileOperation.open(${Path}+"IDP_ID","read");
+         * JSONObject = f.decode();
+         *
+         */
         this.session = session;
     }
 
@@ -37,7 +46,24 @@ public class CustomAuthenticator implements Authenticator {
      */
     @Override
     public void authenticate(AuthenticationFlowContext context) {
-        log.info("CUSTOMER PROVIDER authenticate");
+       if(context.getUser() !=null){
+           return;
+       }
+       //GET OVI_ID from http_request
+       MultivaluedMap<String, String> formData = context.getHttpRequest().getDecodedFormParameters();
+       String OVI_ID = formData.getFirst("OVI_ID");
+
+       //TODO check if this AUTH_ID
+       this.AUTH_ID = context.getSession().getContext().getClient().getClientId();
+
+       //Parse OVI_ID in DOM.
+        //Create JscID and send it to front-end for external API call.
+        Response challenge = context.form().setAttribute("OVI_ID",OVI_ID)
+                .setAttribute("jsc_id",Utils.createJscId(IDP_ID))
+                .createForm("loginuserpass.ftl");
+
+
+       /* log.info("CUSTOMER PROVIDER authenticate");
         MultivaluedMap<String, String> formData = context.getHttpRequest().getDecodedFormParameters();
         String username = formData.getFirst("username");
         String password = formData.getFirst("password");
@@ -80,7 +106,7 @@ public class CustomAuthenticator implements Authenticator {
                     .entity("You must be authenticated to access this resource.")
                     .build());
             return;
-        }
+        }*/
         // It is also possible to use the challenge() method to request the user to provide further information to complete the authentication.
     }
 
@@ -103,6 +129,8 @@ public class CustomAuthenticator implements Authenticator {
 
     @Override
     public void action(AuthenticationFlowContext context) {
+
+        //This will be executed for post form submission;
         log.debug("CUSTOMER PROVIDER action");
     }
 
